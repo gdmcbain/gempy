@@ -1,0 +1,590 @@
+.. only:: html
+
+    .. note::
+        :class: sphx-glr-download-link-note
+
+        Click :ref:`here <sphx_glr_download_examples_geometries_more_examples.py>`     to download the full example code
+    .. rst-class:: sphx-glr-example-title
+
+    .. _sphx_glr_examples_geometries_more_examples.py:
+
+
+GemPy Models - Some More Complex Examples
+-----------------------------------------
+
+Importing gempy
+
+
+.. code-block:: python3
+
+    import gempy as gp
+
+    # Aux imports
+    import numpy as np
+    import pandas as pn
+    import matplotlib
+    import theano
+
+
+
+
+
+
+
+
+Choose a model and load the corresponding data set in the line below
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Model 1: Discordant layering
+
+Model 2: Anticlinal layering
+
+Model 3: Parallel steep dipping layers
+
+Model 5: Normal faulting
+
+Model 6: Synclinal layering
+
+Model 7: Graben structure with two faults
+
+Model 8: Similar to Model 5
+
+Model 9: Parallel flat dipping layers
+
+
+
+.. code-block:: python3
+
+    data_path = 'https://raw.githubusercontent.com/cgre-aachen/gempy_data/master/'
+
+
+
+
+
+
+
+
+
+
+.. code-block:: python3
+
+    def create_example(name_model, interpolator=None, save_pickle=False, plot_section=True):
+        """
+        Create an inter_data from one of the examples data_set
+    
+        Attr:
+            name_model (str): name of the model that you want to generate. It has to be in ['Model 1' ,'Model 2', 'Model 3', 'Model 4','Model 5' 'Model 6','Model 7',
+                              'Model 8', 'Model 9']
+            save_pickle (bool, str): Save to a pickle the interp_data object. You can pass the path as a string otherwse
+                                    the default name will be given
+            plot_section (bool)
+    
+        """
+        name_list = np.array(['Model 1', 'Model 2', 'Model 3', 'Model 4', 'Model 5', 'Model 6', 'Model 7',
+                              'Model 8', 'Model 9'])
+        assert name_model in name_list, 'Name model must be in the following list: ' + str(name_list)
+        # Extract number of the model
+        n_model = name_model[-1]
+
+        # Load right gempy geodata
+        geo_data = gp.create_data(name_model, extent=[0, 2000, 0, 2000, 0, 1600], resolution=[50, 50, 50],
+                                  path_o=data_path + "/data/input_data/lisa_models/foliations" + n_model + ".csv",
+                                  path_i=data_path + "/data/input_data/lisa_models/interfaces" + n_model + ".csv")
+
+        # Set the right sequential pile
+        subset_list_1 = np.array(['Model 1'])
+        subset_list_2 = np.array(['Model 5', 'Model 8'])
+        subset_list_3 = np.array(['Model 2', 'Model 3', 'Model 9', 'Model 6'])
+        subset_list_4 = np.array(['Model 7'])
+        ### Model 1 - Discordant layering ###
+        if name_model in subset_list_1:
+            gp.map_series_to_surfaces(geo_data, {"Strat_Series_1": ('Sandstone', 'Siltstone', 'Shale'),
+                                                 "Strat_Series_2": ('Sandstone2', 'Siltstone2', 'Shale2')},
+                                      )
+        ### Model 5 - One normal Fault ###
+        ### Model 8 - ###
+        elif name_model in subset_list_2:
+            gp.map_series_to_surfaces(geo_data, {"Fault_Series": 'Main_Fault',
+                                                 "Strat_Series": (
+                                                 'Sandstone', 'Siltstone', 'Shale', 'Sandstone_2', 'Schist', 'Gneiss')},
+                                      )
+            geo_data.set_is_fault(['Fault_Series'])
+        elif name_model in subset_list_3:
+            ### Model 2 - Aufwölbung (durch Salzstock?) ###
+            ### Model 3+9 - Parallele NNE Schichtung ohne Verwerfung ###
+            ### Model 6 - Mulde ###
+            gp.map_series_to_surfaces(geo_data, {
+                "Strat_Series": ('Sandstone', 'Siltstone', 'Shale', 'Sandstone_2', 'Schist', 'Gneiss')},
+                                      )
+
+        elif name_model in subset_list_4:
+            ### Model 7 - Graben ###
+            gp.map_series_to_surfaces(geo_data, {"Fault_1": 'Fault_1', "Fault_2": 'Fault_2',
+                                                 "Strat_Series": (
+                                                 'Sandstone', 'Siltstone', 'Shale', 'Sandstone_2', 'Schist', 'Gneiss')},
+                                      )
+            geo_data.set_is_fault(['Fault_1', 'Fault_2'])
+
+        else:
+            print('You would never reach this point. Look for the bug')
+
+        # Interpolation and Computation
+        if interpolator is None:
+            interp_data = gp.set_interpolator(geo_data, theano_optimizer='fast_run')
+        else:
+            interp_data = interpolator
+            geo_data.set_theano_function(interpolator)
+        sol = gp.compute_model(geo_data)
+
+        if plot_section is True:
+            # 2D Plot
+            gp.plot_2d(geo_data, cell_number=25,
+                                 direction='y', show_data=True)
+            gp.plot_3d(geo_data)
+
+        if save_pickle is not False:
+            if type(save_pickle) is str:
+                gp.save_model_to_pickle(geo_data, save_pickle)
+            else:
+                gp.save_model_to_pickle(geo_data, 'lisa-' + str(n_model))
+
+        gp.save_model(geo_data)
+
+        return interp_data
+
+
+
+
+
+
+
+
+
+
+.. code-block:: python3
+
+    def generate_all_models(list_of_models):
+        for e, n in enumerate(list_of_models):
+            if e == 0:
+                interp = create_example(n, None, save_pickle=False, plot_section=True)
+            else:
+                create_example(n, interp, save_pickle=False, plot_section=True)
+
+
+
+
+
+
+
+
+
+Discordant layering 1
+=====================
+
+
+.. code-block:: python3
+
+
+    create_example('Model 1')
+
+
+
+
+.. image:: /examples/geometries/images/sphx_glr_more_examples_001.png
+    :alt: more examples
+    :class: sphx-glr-single-img
+
+.. image:: /examples/geometries/images/sphx_glr_more_examples_002.png
+    :alt: Cell Number: 25 Direction: y
+    :class: sphx-glr-single-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Active grids: ['regular']
+    Setting kriging parameters to their default values.
+    Compiling theano function...
+    Level of Optimization:  fast_run
+    Device:  cpu
+    Precision:  float64
+    Number of faults:  0
+    Compilation Done!
+    Kriging values: 
+                         values
+    range              3.2e+03
+    $C_o$              2.5e+05
+    drift equations  [3, 3, 3]
+
+    <gempy.core.interpolator.InterpolatorModel object at 0x7f3efbb354d0>
+
+
+
+Discordant layering 2
+=====================
+
+
+.. code-block:: python3
+
+
+    create_example('Model 2')
+
+
+
+
+.. image:: /examples/geometries/images/sphx_glr_more_examples_003.png
+    :alt: more examples
+    :class: sphx-glr-single-img
+
+.. image:: /examples/geometries/images/sphx_glr_more_examples_004.png
+    :alt: Cell Number: 25 Direction: y
+    :class: sphx-glr-single-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Active grids: ['regular']
+    Setting kriging parameters to their default values.
+    Compiling theano function...
+    Level of Optimization:  fast_run
+    Device:  cpu
+    Precision:  float64
+    Number of faults:  0
+    Compilation Done!
+    Kriging values: 
+                       values
+    range            3.2e+03
+    $C_o$            2.5e+05
+    drift equations   [3, 3]
+
+    <gempy.core.interpolator.InterpolatorModel object at 0x7f3eea290ad0>
+
+
+
+Discordant layering 3
+=====================
+
+
+.. code-block:: python3
+
+
+    create_example('Model 3')
+
+
+
+
+.. image:: /examples/geometries/images/sphx_glr_more_examples_005.png
+    :alt: more examples
+    :class: sphx-glr-single-img
+
+.. image:: /examples/geometries/images/sphx_glr_more_examples_006.png
+    :alt: Cell Number: 25 Direction: y
+    :class: sphx-glr-single-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Active grids: ['regular']
+    Setting kriging parameters to their default values.
+    Compiling theano function...
+    Level of Optimization:  fast_run
+    Device:  cpu
+    Precision:  float64
+    Number of faults:  0
+    Compilation Done!
+    Kriging values: 
+                       values
+    range            3.2e+03
+    $C_o$            2.5e+05
+    drift equations   [3, 3]
+
+    <gempy.core.interpolator.InterpolatorModel object at 0x7f3ea3555190>
+
+
+
+One normal Fault 1
+==================
+
+
+.. code-block:: python3
+
+
+    create_example('Model 5')
+
+
+
+
+.. image:: /examples/geometries/images/sphx_glr_more_examples_007.png
+    :alt: more examples
+    :class: sphx-glr-single-img
+
+.. image:: /examples/geometries/images/sphx_glr_more_examples_008.png
+    :alt: Cell Number: 25 Direction: y
+    :class: sphx-glr-single-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Active grids: ['regular']
+    Fault colors changed. If you do not like this behavior, set change_color to False.
+    Setting kriging parameters to their default values.
+    Compiling theano function...
+    Level of Optimization:  fast_run
+    Device:  cpu
+    Precision:  float64
+    Number of faults:  1
+    Compilation Done!
+    Kriging values: 
+                         values
+    range              3.2e+03
+    $C_o$              2.5e+05
+    drift equations  [3, 3, 3]
+
+    <gempy.core.interpolator.InterpolatorModel object at 0x7f3e9f2aa190>
+
+
+
+Fold
+====
+
+
+.. code-block:: python3
+
+
+    create_example('Model 6')
+
+
+
+
+.. image:: /examples/geometries/images/sphx_glr_more_examples_009.png
+    :alt: more examples
+    :class: sphx-glr-single-img
+
+.. image:: /examples/geometries/images/sphx_glr_more_examples_010.png
+    :alt: Cell Number: 25 Direction: y
+    :class: sphx-glr-single-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Active grids: ['regular']
+    Setting kriging parameters to their default values.
+    Compiling theano function...
+    Level of Optimization:  fast_run
+    Device:  cpu
+    Precision:  float64
+    Number of faults:  0
+    Compilation Done!
+    Kriging values: 
+                       values
+    range            3.2e+03
+    $C_o$            2.5e+05
+    drift equations   [3, 3]
+
+    <gempy.core.interpolator.InterpolatorModel object at 0x7f3ee900f050>
+
+
+
+Graben
+======
+
+
+.. code-block:: python3
+
+
+    create_example('Model 7')
+
+
+
+
+.. image:: /examples/geometries/images/sphx_glr_more_examples_011.png
+    :alt: more examples
+    :class: sphx-glr-single-img
+
+.. image:: /examples/geometries/images/sphx_glr_more_examples_012.png
+    :alt: Cell Number: 25 Direction: y
+    :class: sphx-glr-single-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Active grids: ['regular']
+    Fault colors changed. If you do not like this behavior, set change_color to False.
+    Setting kriging parameters to their default values.
+    Compiling theano function...
+    Level of Optimization:  fast_run
+    Device:  cpu
+    Precision:  float64
+    Number of faults:  2
+    Compilation Done!
+    Kriging values: 
+                            values
+    range                 3.2e+03
+    $C_o$                 2.5e+05
+    drift equations  [3, 3, 3, 3]
+
+    <gempy.core.interpolator.InterpolatorModel object at 0x7f3f28a9c090>
+
+
+
+One normal Fault 2
+===================
+
+
+.. code-block:: python3
+
+
+    create_example('Model 8')
+
+
+
+
+.. image:: /examples/geometries/images/sphx_glr_more_examples_013.png
+    :alt: more examples
+    :class: sphx-glr-single-img
+
+.. image:: /examples/geometries/images/sphx_glr_more_examples_014.png
+    :alt: Cell Number: 25 Direction: y
+    :class: sphx-glr-single-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Active grids: ['regular']
+    Fault colors changed. If you do not like this behavior, set change_color to False.
+    Setting kriging parameters to their default values.
+    Compiling theano function...
+    Level of Optimization:  fast_run
+    Device:  cpu
+    Precision:  float64
+    Number of faults:  1
+    Compilation Done!
+    Kriging values: 
+                         values
+    range              3.2e+03
+    $C_o$              2.5e+05
+    drift equations  [3, 3, 3]
+
+    <gempy.core.interpolator.InterpolatorModel object at 0x7f3e99bd84d0>
+
+
+
+Horizontal tilted
+=================
+
+
+.. code-block:: python3
+
+
+    create_example('Model 9')
+
+
+
+
+
+.. image:: /examples/geometries/images/sphx_glr_more_examples_015.png
+    :alt: more examples
+    :class: sphx-glr-single-img
+
+.. image:: /examples/geometries/images/sphx_glr_more_examples_016.png
+    :alt: Cell Number: 25 Direction: y
+    :class: sphx-glr-single-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Active grids: ['regular']
+    Setting kriging parameters to their default values.
+    Compiling theano function...
+    Level of Optimization:  fast_run
+    Device:  cpu
+    Precision:  float64
+    Number of faults:  0
+    Compilation Done!
+    Kriging values: 
+                       values
+    range            3.2e+03
+    $C_o$            2.5e+05
+    drift equations   [3, 3]
+
+    <gempy.core.interpolator.InterpolatorModel object at 0x7f3ea3021090>
+
+
+
+
+.. code-block:: python3
+
+
+    # generate_all_models(['Model 1', 'Model 2', 'Model 3',
+    #                     'Model 5', 'Model 6', 'Model 7',
+    #                     'Model 8', 'Model 9'])
+
+
+
+
+
+
+
+
+.. rst-class:: sphx-glr-timing
+
+   **Total running time of the script:** ( 1 minutes  31.083 seconds)
+
+
+.. _sphx_glr_download_examples_geometries_more_examples.py:
+
+
+.. only :: html
+
+ .. container:: sphx-glr-footer
+    :class: sphx-glr-footer-example
+
+
+
+  .. container:: sphx-glr-download sphx-glr-download-python
+
+     :download:`Download Python source code: more_examples.py <more_examples.py>`
+
+
+
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
+
+     :download:`Download Jupyter notebook: more_examples.ipynb <more_examples.ipynb>`
+
+
+.. only:: html
+
+ .. rst-class:: sphx-glr-signature
+
+    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_

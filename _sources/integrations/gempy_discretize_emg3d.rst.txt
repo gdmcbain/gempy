@@ -1,0 +1,814 @@
+.. only:: html
+
+    .. note::
+        :class: sphx-glr-download-link-note
+
+        Click :ref:`here <sphx_glr_download_integrations_gempy_discretize_emg3d.py>`     to download the full example code
+    .. rst-class:: sphx-glr-example-title
+
+    .. _sphx_glr_integrations_gempy_discretize_emg3d.py:
+
+
+Use ``GemPy`` to create a geological model as input to ``emg3d``
+================================================================
+
+
+.. code-block:: python3
+
+    import numpy as np
+    import gempy as gempy
+    from matplotlib.colors import LogNorm, SymLogNorm
+
+
+
+
+
+
+
+
+
+.. code-block:: python3
+
+    import emg3d
+    import pyvista
+    import discretize
+
+
+
+
+
+
+
+
+Creating a geological model
+---------------------------
+
+We start by using the model given in `Chapter
+1.1 <https://nbviewer.jupyter.org/github/cgre-aachen/gempy/blob/master/notebooks/tutorials/ch1-1_Basics.ipynb>`__
+of the GemPy documentation. It is a nice, made-up model of a folded
+structure with a fault.
+
+**Changes made:** We load the csv-files from the above example in
+Chapter 1.1. I changed the stratigraphic unit names, and moved the model
+2 km down.
+
+Instead of reading a csv-file we could initiate an empty instance and
+then add points and orientations after that by, e.g., providing numpy
+arrays.
+
+
+Initiate a model
+
+
+.. code-block:: python3
+
+    geo_model = gempy.create_model('gempy-discretize-emg3d')
+
+    data_path = 'https://raw.githubusercontent.com/cgre-aachen/gempy_data/master/'
+
+    # Importing the data from CSV-files and setting extent and resolution
+    gempy.init_data(
+        geo_model,
+        [0, 2000., 0, 2000., -2000, 40.], [50, 50, 51],  # This is a regular grid, mainly for plotting purposes
+        path_o=data_path+"/data/input_data/tut_chapter1/simple_fault_model_orientations_geophy.csv",
+        path_i=data_path+"/data/input_data/tut_chapter1/simple_fault_model_points_geophy.csv",
+    )
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Active grids: ['regular']
+
+    gempy-discretize-emg3d  2020-08-14 11:30
+
+
+
+Initiate the stratigraphies and faults, and add resistivities to lithology
+--------------------------------------------------------------------------
+
+
+Add an air-layer: Horizontal layer at z=0m
+
+
+.. code-block:: python3
+
+    geo_model.add_surfaces('air')
+    geo_model.add_surface_points(0, 0, 0, 'air')
+    geo_model.add_surface_points(0, 0, 0, 'air')
+    geo_model.add_orientations(0, 0, 0, 'air', [0, 0, 1])
+
+    # Add a Series for the air layer; this series will not be cut by the fault
+    geo_model.add_series('Air_Series')
+    geo_model.modify_order_series(2, 'Air_Series')
+    gempy.map_series_to_surfaces(geo_model, {'Air_Series': 'air'})
+
+    # Map the different series
+    gempy.map_series_to_surfaces(
+        geo_model,
+        {
+            "Fault_Series": 'fault',
+            "Air_Series": ('air'),
+            "Strat_Series": ('seawater', 'overburden', 'target', 'underburden', 'basement')
+        },
+        remove_unused_series=True
+    )
+
+
+
+
+
+
+.. only:: builder_html
+
+    .. raw:: html
+
+        <style  type="text/css" >
+            #T_8fba24f0_de21_11ea_ad2b_42010a14003frow0_col3 {
+                    background-color:  #5DA629;
+                }    #T_8fba24f0_de21_11ea_ad2b_42010a14003frow1_col3 {
+                    background-color:  #443988;
+                }    #T_8fba24f0_de21_11ea_ad2b_42010a14003frow2_col3 {
+                    background-color:  #015482;
+                }    #T_8fba24f0_de21_11ea_ad2b_42010a14003frow3_col3 {
+                    background-color:  #9f0052;
+                }    #T_8fba24f0_de21_11ea_ad2b_42010a14003frow4_col3 {
+                    background-color:  #ffbe00;
+                }    #T_8fba24f0_de21_11ea_ad2b_42010a14003frow5_col3 {
+                    background-color:  #728f02;
+                }    #T_8fba24f0_de21_11ea_ad2b_42010a14003frow6_col3 {
+                    background-color:  #ff3f20;
+                }</style><table id="T_8fba24f0_de21_11ea_ad2b_42010a14003f" ><thead>    <tr>        <th class="blank level0" ></th>        <th class="col_heading level0 col0" >surface</th>        <th class="col_heading level0 col1" >series</th>        <th class="col_heading level0 col2" >order_surfaces</th>        <th class="col_heading level0 col3" >color</th>        <th class="col_heading level0 col4" >id</th>    </tr></thead><tbody>
+                        <tr>
+                                <th id="T_8fba24f0_de21_11ea_ad2b_42010a14003flevel0_row0" class="row_heading level0 row0" >6</th>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow0_col0" class="data row0 col0" >air</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow0_col1" class="data row0 col1" >Air_Series</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow0_col2" class="data row0 col2" >1</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow0_col3" class="data row0 col3" >#5DA629</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow0_col4" class="data row0 col4" >1</td>
+                    </tr>
+                    <tr>
+                                <th id="T_8fba24f0_de21_11ea_ad2b_42010a14003flevel0_row1" class="row_heading level0 row1" >4</th>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow1_col0" class="data row1 col0" >fault</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow1_col1" class="data row1 col1" >Fault_Series</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow1_col2" class="data row1 col2" >1</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow1_col3" class="data row1 col3" >#443988</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow1_col4" class="data row1 col4" >2</td>
+                    </tr>
+                    <tr>
+                                <th id="T_8fba24f0_de21_11ea_ad2b_42010a14003flevel0_row2" class="row_heading level0 row2" >0</th>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow2_col0" class="data row2 col0" >target</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow2_col1" class="data row2 col1" >Strat_Series</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow2_col2" class="data row2 col2" >1</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow2_col3" class="data row2 col3" >#015482</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow2_col4" class="data row2 col4" >3</td>
+                    </tr>
+                    <tr>
+                                <th id="T_8fba24f0_de21_11ea_ad2b_42010a14003flevel0_row3" class="row_heading level0 row3" >1</th>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow3_col0" class="data row3 col0" >underburden</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow3_col1" class="data row3 col1" >Strat_Series</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow3_col2" class="data row3 col2" >2</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow3_col3" class="data row3 col3" >#9f0052</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow3_col4" class="data row3 col4" >4</td>
+                    </tr>
+                    <tr>
+                                <th id="T_8fba24f0_de21_11ea_ad2b_42010a14003flevel0_row4" class="row_heading level0 row4" >2</th>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow4_col0" class="data row4 col0" >overburden</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow4_col1" class="data row4 col1" >Strat_Series</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow4_col2" class="data row4 col2" >3</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow4_col3" class="data row4 col3" >#ffbe00</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow4_col4" class="data row4 col4" >5</td>
+                    </tr>
+                    <tr>
+                                <th id="T_8fba24f0_de21_11ea_ad2b_42010a14003flevel0_row5" class="row_heading level0 row5" >3</th>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow5_col0" class="data row5 col0" >seawater</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow5_col1" class="data row5 col1" >Strat_Series</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow5_col2" class="data row5 col2" >4</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow5_col3" class="data row5 col3" >#728f02</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow5_col4" class="data row5 col4" >6</td>
+                    </tr>
+                    <tr>
+                                <th id="T_8fba24f0_de21_11ea_ad2b_42010a14003flevel0_row6" class="row_heading level0 row6" >5</th>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow6_col0" class="data row6 col0" >basement</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow6_col1" class="data row6 col1" >Strat_Series</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow6_col2" class="data row6 col2" >5</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow6_col3" class="data row6 col3" >#ff3f20</td>
+                                <td id="T_8fba24f0_de21_11ea_ad2b_42010a14003frow6_col4" class="data row6 col4" >7</td>
+                    </tr>
+            </tbody></table>
+        <br />
+        <br />
+
+
+.. code-block:: python3
+
+    geo_model.rename_series({'Main_Fault': 'Fault_Series'})
+
+
+
+
+
+
+
+
+Set which series the fault series is cutting
+
+
+.. code-block:: python3
+
+    geo_model.set_is_fault('Fault_Series')
+    geo_model.faults.faults_relations_df
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Fault colors changed. If you do not like this behavior, set change_color to False.
+
+
+.. only:: builder_html
+
+    .. raw:: html
+
+        <div>
+        <style scoped>
+            .dataframe tbody tr th:only-of-type {
+                vertical-align: middle;
+            }
+
+            .dataframe tbody tr th {
+                vertical-align: top;
+            }
+
+            .dataframe thead th {
+                text-align: right;
+            }
+        </style>
+        <table border="1" class="dataframe">
+          <thead>
+            <tr style="text-align: right;">
+              <th></th>
+              <th>Air_Series</th>
+              <th>Fault_Series</th>
+              <th>Strat_Series</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>Air_Series</th>
+              <td>False</td>
+              <td>False</td>
+              <td>False</td>
+            </tr>
+            <tr>
+              <th>Fault_Series</th>
+              <td>False</td>
+              <td>False</td>
+              <td>True</td>
+            </tr>
+            <tr>
+              <th>Strat_Series</th>
+              <td>False</td>
+              <td>False</td>
+              <td>False</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+        <br />
+        <br />
+
+Model generation
+----------------
+
+
+
+.. code-block:: python3
+
+    gempy.set_interpolator(
+        geo_model,
+        compile_theano=True,
+        theano_optimizer='fast_compile',
+        verbose=[]
+    )
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Setting kriging parameters to their default values.
+    Compiling theano function...
+    Level of Optimization:  fast_compile
+    Device:  cpu
+    Precision:  float64
+    Number of faults:  1
+    Compilation Done!
+    Kriging values: 
+                         values
+    range              3.5e+03
+    $C_o$              2.9e+05
+    drift equations  [3, 3, 3]
+
+    <gempy.core.interpolator.InterpolatorModel object at 0x7f3ea359df90>
+
+
+
+
+.. code-block:: python3
+
+    sol = gempy.compute_model(geo_model, compute_mesh=True)
+
+
+
+
+
+
+
+
+Plot lithologies (colour-code corresponds to lithologies)
+
+
+.. code-block:: python3
+
+    _ = gempy.plot_2d(geo_model, cell_number=25, direction='y', show_data=True)
+
+
+
+
+.. image:: /integrations/images/sphx_glr_gempy_discretize_emg3d_001.png
+    :alt: Cell Number: 25 Direction: y
+    :class: sphx-glr-single-img
+
+
+
+
+
+Let’s start with a discretize mesh for a CSEM survey
+----------------------------------------------------
+
+Source location and frequency
+
+
+
+.. code-block:: python3
+
+    src = [1000, 1000, -500, 0, 0]  # x-directed e-source at (1000, 1000, -500)
+    freq = 1.0  # Frequency
+
+
+
+
+
+
+
+
+Get calculation domain as a function of frequency (resp., skin depth)
+
+
+.. code-block:: python3
+
+    hx_min, xdomain = emg3d.utils.get_domain(
+            x0=src[0], freq=freq, limits=[0, 2000], min_width=[5, 100])
+    hz_min, zdomain = emg3d.utils.get_domain(
+            freq=freq, limits=[-2000, 0], min_width=[5, 20], fact_pos=40)
+
+    # Create stretched grid
+    nx = 2 ** 6
+    hx = emg3d.utils.get_stretched_h(hx_min, xdomain, nx, src[0])
+    hy = emg3d.utils.get_stretched_h(hx_min, xdomain, nx, src[1])
+    hz = emg3d.utils.get_stretched_h(hz_min, zdomain, nx * 2, x0=src[2], x1=0)
+    grid = discretize.TensorMesh(
+            [hx, hy, hz], x0=(xdomain[0], xdomain[0], zdomain[0]))
+    grid
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Warning :: Minimum cell width (43.07 m) is below `min_width`, because `nx` is too big for `domain`.
+    Warning :: Minimum cell width (43.07 m) is below `min_width`, because `nx` is too big for `domain`.
+
+
+.. only:: builder_html
+
+    .. raw:: html
+
+        <table>
+          <tr>
+            <td style='font-weight: bold; font-size: 1.2em; text-align: center;' colspan='3'>TensorMesh</td>
+            <td style='font-size: 1.2em; text-align: center;'colspan='4'>524,288 cells</td>
+          </tr>
+          <tr>
+            <th></th>
+            <th></th>
+            <th colspan='2' style='padding: 5px 20px 5px 20px;'>MESH EXTENT</th>
+            <th colspan='2' style='padding: 5px 20px 5px 20px;'>CELL WIDTH</th>
+            <th style='padding: 5px 20px 5px 20px;'>FACTOR</th>
+          </tr>
+          <tr>
+            <th style='padding: 5px 20px 5px 20px;'>dir</th>
+            <th style='padding: 5px 20px 5px 20px;'>nC</th>
+            <th style='padding: 5px 20px 5px 20px;'>min</th>
+            <th style='padding: 5px 20px 5px 20px;'>max</th>
+            <th style='padding: 5px 20px 5px 20px;'>min</th>
+            <th style='padding: 5px 20px 5px 20px;'>max</th>
+            <th style='padding: 5px 20px 5px 20px;'>max</th>
+          </tr>
+          <tr>
+            <td style='padding: 5px 20px 5px 20px;'>x</td>
+            <td style='padding: 5px 20px 5px 20px;'>64</td>
+            <td style='padding: 5px 20px 5px 20px;'>-378.34</td>
+            <td style='padding: 5px 20px 5px 20px;'>2,378.34</td>
+            <td style='padding: 5px 20px 5px 20px;'>43.07</td>
+            <td style='padding: 5px 20px 5px 20px;'>43.07</td>
+            <td style='padding: 5px 20px 5px 20px;'>1.00</td>
+          </tr>
+          <tr>
+            <td style='padding: 5px 20px 5px 20px;'>y</td>
+            <td style='padding: 5px 20px 5px 20px;'>64</td>
+            <td style='padding: 5px 20px 5px 20px;'>-378.34</td>
+            <td style='padding: 5px 20px 5px 20px;'>2,378.34</td>
+            <td style='padding: 5px 20px 5px 20px;'>43.07</td>
+            <td style='padding: 5px 20px 5px 20px;'>43.07</td>
+            <td style='padding: 5px 20px 5px 20px;'>1.00</td>
+          </tr>
+          <tr>
+            <td style='padding: 5px 20px 5px 20px;'>z</td>
+            <td style='padding: 5px 20px 5px 20px;'>128</td>
+            <td style='padding: 5px 20px 5px 20px;'>-2,000.00</td>
+            <td style='padding: 5px 20px 5px 20px;'>11,334.05</td>
+            <td style='padding: 5px 20px 5px 20px;'>20.00</td>
+            <td style='padding: 5px 20px 5px 20px;'>531.76</td>
+            <td style='padding: 5px 20px 5px 20px;'>1.05</td>
+          </tr>
+        </table>
+
+        <br />
+        <br />
+
+Create a smaller grid without the massive air-layer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(The massive air-layer is used to push the boundary far away for the
+calculation.)
+
+
+
+.. code-block:: python3
+
+    c_nz = 70
+    cgrid = discretize.TensorMesh([grid.hx, grid.hy, grid.hz[:-c_nz]], x0=grid.x0)
+
+
+
+
+
+
+
+
+Put resistivities to stratigraphic units
+----------------------------------------
+
+We could define the resistivities before, but currently it is difficult
+for GemPy to interpolate for something like resistivities with a very
+wide range of values (several orders of magnitudes). So we can simply
+map it here to the ``id`` (Note: GemPy does not do interpolation for
+cells which lie in different stratigraphies).
+
+
+First, we have to get the id's for our mesh
+
+
+.. code-block:: python3
+
+    sol = gempy.compute_model(geo_model, at=grid.gridCC)
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Active grids: ['custom']
+
+
+
+
+
+.. code-block:: python3
+
+    geo_model.surfaces
+
+
+
+
+
+
+.. only:: builder_html
+
+    .. raw:: html
+
+        <style  type="text/css" >
+            #T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow0_col3 {
+                    background-color:  #5DA629;
+                }    #T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow1_col3 {
+                    background-color:  #527682;
+                }    #T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow2_col3 {
+                    background-color:  #728f02;
+                }    #T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow3_col3 {
+                    background-color:  #ffbe00;
+                }    #T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow4_col3 {
+                    background-color:  #015482;
+                }    #T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow5_col3 {
+                    background-color:  #9f0052;
+                }    #T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow6_col3 {
+                    background-color:  #ff3f20;
+                }</style><table id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003f" ><thead>    <tr>        <th class="blank level0" ></th>        <th class="col_heading level0 col0" >surface</th>        <th class="col_heading level0 col1" >series</th>        <th class="col_heading level0 col2" >order_surfaces</th>        <th class="col_heading level0 col3" >color</th>        <th class="col_heading level0 col4" >id</th>    </tr></thead><tbody>
+                        <tr>
+                                <th id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003flevel0_row0" class="row_heading level0 row0" >6</th>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow0_col0" class="data row0 col0" >air</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow0_col1" class="data row0 col1" >Air_Series</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow0_col2" class="data row0 col2" >1</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow0_col3" class="data row0 col3" >#5DA629</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow0_col4" class="data row0 col4" >1</td>
+                    </tr>
+                    <tr>
+                                <th id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003flevel0_row1" class="row_heading level0 row1" >4</th>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow1_col0" class="data row1 col0" >fault</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow1_col1" class="data row1 col1" >Fault_Series</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow1_col2" class="data row1 col2" >1</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow1_col3" class="data row1 col3" >#527682</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow1_col4" class="data row1 col4" >2</td>
+                    </tr>
+                    <tr>
+                                <th id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003flevel0_row2" class="row_heading level0 row2" >3</th>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow2_col0" class="data row2 col0" >seawater</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow2_col1" class="data row2 col1" >Strat_Series</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow2_col2" class="data row2 col2" >1</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow2_col3" class="data row2 col3" >#728f02</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow2_col4" class="data row2 col4" >3</td>
+                    </tr>
+                    <tr>
+                                <th id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003flevel0_row3" class="row_heading level0 row3" >2</th>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow3_col0" class="data row3 col0" >overburden</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow3_col1" class="data row3 col1" >Strat_Series</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow3_col2" class="data row3 col2" >2</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow3_col3" class="data row3 col3" >#ffbe00</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow3_col4" class="data row3 col4" >4</td>
+                    </tr>
+                    <tr>
+                                <th id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003flevel0_row4" class="row_heading level0 row4" >0</th>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow4_col0" class="data row4 col0" >target</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow4_col1" class="data row4 col1" >Strat_Series</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow4_col2" class="data row4 col2" >3</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow4_col3" class="data row4 col3" >#015482</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow4_col4" class="data row4 col4" >5</td>
+                    </tr>
+                    <tr>
+                                <th id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003flevel0_row5" class="row_heading level0 row5" >1</th>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow5_col0" class="data row5 col0" >underburden</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow5_col1" class="data row5 col1" >Strat_Series</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow5_col2" class="data row5 col2" >4</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow5_col3" class="data row5 col3" >#9f0052</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow5_col4" class="data row5 col4" >6</td>
+                    </tr>
+                    <tr>
+                                <th id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003flevel0_row6" class="row_heading level0 row6" >5</th>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow6_col0" class="data row6 col0" >basement</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow6_col1" class="data row6 col1" >Strat_Series</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow6_col2" class="data row6 col2" >5</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow6_col3" class="data row6 col3" >#ff3f20</td>
+                                <td id="T_a2c7cbc4_de21_11ea_ad2b_42010a14003frow6_col4" class="data row6 col4" >7</td>
+                    </tr>
+            </tbody></table>
+        <br />
+        <br />
+
+Now, we convert the id's to resistivities
+
+
+.. code-block:: python3
+
+    res = sol.custom[0][0, :grid.nC]
+
+    res[res == 1] = 2e14  # air
+    # id=2 is the fault
+    res[np.round(res) == 3] = 0.3  # sea water
+    res[np.round(res) == 4] = 1  # overburden
+    res[np.round(res) == 5] = 50  # target
+    res[np.round(res) == 6] = 1.5  # underburden
+    res[np.round(res) == 7] = 200  # basement
+
+
+
+
+
+
+
+
+Plot the input model
+--------------------
+
+
+sphinx_gallery_thumbnail_number = 2
+
+
+.. code-block:: python3
+
+    dataset = grid.toVTK({'res': np.log10(res)})
+    dataset = dataset.clip_box(bounds=(0, 2000, 0, 2000, -2000, 0), invert=False)
+
+    # Create the rendering scene and add a grid axes
+    p = pyvista.Plotter(notebook=True)
+    p.show_grid(location='outer')
+
+    # Add spatially referenced data to the scene
+    dparams = {'rng': np.log10([0.3, 200]), 'cmap': 'viridis', 'show_edges': False}
+    xyz = (1500, 500, -1500)
+    p.add_mesh(dataset.slice('x', xyz), name='x-slice', **dparams)
+    p.add_mesh(dataset.slice('y', xyz), name='y-slice', **dparams)
+    # p.add_mesh(dataset.slice('z', xyz), name='z-slice', **dparams)
+
+    # Add a layer as 3D
+    p.add_mesh(dataset.threshold([1.69, 1.7]), name='vol', **dparams)
+
+    # Show the scene!
+    p.show()
+
+
+
+
+.. image:: /integrations/images/sphx_glr_gempy_discretize_emg3d_002.png
+    :alt: gempy discretize emg3d
+    :class: sphx-glr-single-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    <PIL.Image.Image image mode=RGB size=2048x1536 at 0x7F3EA0278D50>
+
+
+
+
+Calculate the resistivities
+---------------------------
+
+
+Create model
+
+
+.. code-block:: python3
+
+    model = emg3d.utils.Model(grid, res)
+
+    # Source field
+    sfield = emg3d.utils.get_source_field(grid, src, freq, 0)
+
+    # Calculate the efield
+    pfield = emg3d.solve(grid, model, sfield, sslsolver=True, verb=3)
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+
+    :: emg3d START :: 11:31:08 :: v0.11.0
+
+       MG-cycle       : 'F'                 sslsolver : 'bicgstab'
+       semicoarsening : False [0]           tol       : 1e-06
+       linerelaxation : False [0]           maxit     : 50 (1)
+       nu_{i,1,c,2}   : 0, 2, 1, 2          verb      : 3
+       Original grid  :  64 x  64 x 128     => 524,288 cells
+       Coarsest grid  :   2 x   2 x   2     => 8 cells
+       Coarsest level :   5 ;   5 ;   6   
+
+       [hh:mm:ss]  rel. error            solver              MG          l s
+
+           h_
+          2h_ \                                        /
+          4h_  \                            /\        / 
+          8h_   \                  /\      /  \      /  
+         16h_    \          /\    /  \    /    \    /   
+         32h_     \    /\  /  \  /    \  /      \  /    
+         64h_      \/\/  \/    \/      \/        \/     
+
+       [11:31:23]   5.921e+30  after                       1 F-cycles    0 0
+
+    * ERROR   :: DIVERGED (returned field is zero)
+       > Solver steps     : 0
+       > MG prec. steps   : 1
+       > Final rel. error : 4.492e-01
+
+    :: emg3d END   :: 11:31:23 :: runtime = 0:00:16
+
+
+
+
+
+
+.. code-block:: python3
+
+    cgrid.plot_3d_slicer(
+        pfield.fx[:, :, :-70].ravel('F'), zslice=-1000, view='abs', vType='Ex',
+        clim=[1e-13, 1e-8], pcolorOpts={'cmap': 'viridis', 'norm': LogNorm()})
+
+
+
+
+.. image:: /integrations/images/sphx_glr_gempy_discretize_emg3d_003.png
+    :alt: gempy discretize emg3d
+    :class: sphx-glr-single-img
+
+
+
+
+
+
+.. code-block:: python3
+
+    emg3d.__version__
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+
+    '0.11.0'
+
+
+
+
+.. rst-class:: sphx-glr-timing
+
+   **Total running time of the script:** ( 0 minutes  53.948 seconds)
+
+
+.. _sphx_glr_download_integrations_gempy_discretize_emg3d.py:
+
+
+.. only :: html
+
+ .. container:: sphx-glr-footer
+    :class: sphx-glr-footer-example
+
+
+
+  .. container:: sphx-glr-download sphx-glr-download-python
+
+     :download:`Download Python source code: gempy_discretize_emg3d.py <gempy_discretize_emg3d.py>`
+
+
+
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
+
+     :download:`Download Jupyter notebook: gempy_discretize_emg3d.ipynb <gempy_discretize_emg3d.ipynb>`
+
+
+.. only:: html
+
+ .. rst-class:: sphx-glr-signature
+
+    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_

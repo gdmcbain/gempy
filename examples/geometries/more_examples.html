@@ -1,0 +1,505 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GemPy Models - Some More Complex Examples &#8212; GemPy 2.2.4 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/gallery-dataframe.css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="shortcut icon" href="../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Alesmodel: Plotting sections and maps." href="../real/Alesmodel.html" />
+    <link rel="prev" title="Model 7 - Combination" href="7_combination.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p>Click <a class="reference internal" href="#sphx-glr-download-examples-geometries-more-examples-py"><span class="std std-ref">here</span></a>     to download the full example code</p>
+</div>
+<div class="sphx-glr-example-title section" id="gempy-models-some-more-complex-examples">
+<span id="sphx-glr-examples-geometries-more-examples-py"></span><h1>GemPy Models - Some More Complex Examples<a class="headerlink" href="#gempy-models-some-more-complex-examples" title="Permalink to this headline">¶</a></h1>
+<p>Importing gempy</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gempy</span> <span class="k">as</span> <span class="nn">gp</span>
+
+<span class="c1"># Aux imports</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pn</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">theano</span>
+</pre></div>
+</div>
+<div class="section" id="choose-a-model-and-load-the-corresponding-data-set-in-the-line-below">
+<h2>Choose a model and load the corresponding data set in the line below<a class="headerlink" href="#choose-a-model-and-load-the-corresponding-data-set-in-the-line-below" title="Permalink to this headline">¶</a></h2>
+<p>Model 1: Discordant layering</p>
+<p>Model 2: Anticlinal layering</p>
+<p>Model 3: Parallel steep dipping layers</p>
+<p>Model 5: Normal faulting</p>
+<p>Model 6: Synclinal layering</p>
+<p>Model 7: Graben structure with two faults</p>
+<p>Model 8: Similar to Model 5</p>
+<p>Model 9: Parallel flat dipping layers</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_path</span></a> <span class="o">=</span> <span class="s1">&#39;https://raw.githubusercontent.com/cgre-aachen/gempy_data/master/&#39;</span>
+</pre></div>
+</div>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">create_example</span><span class="p">(</span><span class="n">name_model</span><span class="p">,</span> <span class="n">interpolator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_pickle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plot_section</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create an inter_data from one of the examples data_set</span>
+
+<span class="sd">    Attr:</span>
+<span class="sd">        name_model (str): name of the model that you want to generate. It has to be in [&#39;Model 1&#39; ,&#39;Model 2&#39;, &#39;Model 3&#39;, &#39;Model 4&#39;,&#39;Model 5&#39; &#39;Model 6&#39;,&#39;Model 7&#39;,</span>
+<span class="sd">                          &#39;Model 8&#39;, &#39;Model 9&#39;]</span>
+<span class="sd">        save_pickle (bool, str): Save to a pickle the interp_data object. You can pass the path as a string otherwse</span>
+<span class="sd">                                the default name will be given</span>
+<span class="sd">        plot_section (bool)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name_list</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">([</span><span class="s1">&#39;Model 1&#39;</span><span class="p">,</span> <span class="s1">&#39;Model 2&#39;</span><span class="p">,</span> <span class="s1">&#39;Model 3&#39;</span><span class="p">,</span> <span class="s1">&#39;Model 4&#39;</span><span class="p">,</span> <span class="s1">&#39;Model 5&#39;</span><span class="p">,</span> <span class="s1">&#39;Model 6&#39;</span><span class="p">,</span> <span class="s1">&#39;Model 7&#39;</span><span class="p">,</span>
+                          <span class="s1">&#39;Model 8&#39;</span><span class="p">,</span> <span class="s1">&#39;Model 9&#39;</span><span class="p">])</span>
+    <span class="k">assert</span> <span class="n">name_model</span> <span class="ow">in</span> <span class="n">name_list</span><span class="p">,</span> <span class="s1">&#39;Name model must be in the following list: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">name_list</span><span class="p">)</span>
+    <span class="c1"># Extract number of the model</span>
+    <span class="n">n_model</span> <span class="o">=</span> <span class="n">name_model</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Load right gempy geodata</span>
+    <span class="n">geo_data</span> <span class="o">=</span> <a href="../../GemPy API/gempy.create_data.html#gempy.create_data" title="gempy.create_data" class="sphx-glr-backref-module-gempy sphx-glr-backref-type-py-function"><span class="n">gp</span><span class="o">.</span><span class="n">create_data</span></a><span class="p">(</span><span class="n">name_model</span><span class="p">,</span> <span class="n">extent</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2000</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2000</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1600</span><span class="p">],</span> <span class="n">resolution</span><span class="o">=</span><span class="p">[</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">],</span>
+                              <span class="n">path_o</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_path</span></a> <span class="o">+</span> <span class="s2">&quot;/data/input_data/lisa_models/foliations&quot;</span> <span class="o">+</span> <span class="n">n_model</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">,</span>
+                              <span class="n">path_i</span><span class="o">=</span><a href="https://docs.python.org/3/library/stdtypes.html#str" title="builtins.str" class="sphx-glr-backref-module-builtins sphx-glr-backref-type-py-class sphx-glr-backref-instance"><span class="n">data_path</span></a> <span class="o">+</span> <span class="s2">&quot;/data/input_data/lisa_models/interfaces&quot;</span> <span class="o">+</span> <span class="n">n_model</span> <span class="o">+</span> <span class="s2">&quot;.csv&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Set the right sequential pile</span>
+    <span class="n">subset_list_1</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">([</span><span class="s1">&#39;Model 1&#39;</span><span class="p">])</span>
+    <span class="n">subset_list_2</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">([</span><span class="s1">&#39;Model 5&#39;</span><span class="p">,</span> <span class="s1">&#39;Model 8&#39;</span><span class="p">])</span>
+    <span class="n">subset_list_3</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">([</span><span class="s1">&#39;Model 2&#39;</span><span class="p">,</span> <span class="s1">&#39;Model 3&#39;</span><span class="p">,</span> <span class="s1">&#39;Model 9&#39;</span><span class="p">,</span> <span class="s1">&#39;Model 6&#39;</span><span class="p">])</span>
+    <span class="n">subset_list_4</span> <span class="o">=</span> <a href="https://numpy.org/doc/stable/reference/generated/numpy.array.html#numpy.array" title="numpy.array" class="sphx-glr-backref-module-numpy sphx-glr-backref-type-py-function"><span class="n">np</span><span class="o">.</span><span class="n">array</span></a><span class="p">([</span><span class="s1">&#39;Model 7&#39;</span><span class="p">])</span>
+    <span class="c1">### Model 1 - Discordant layering ###</span>
+    <span class="k">if</span> <span class="n">name_model</span> <span class="ow">in</span> <span class="n">subset_list_1</span><span class="p">:</span>
+        <a href="../../GemPy API/gempy.map_series_to_surfaces.html#gempy.map_series_to_surfaces" title="gempy.map_series_to_surfaces" class="sphx-glr-backref-module-gempy sphx-glr-backref-type-py-function"><span class="n">gp</span><span class="o">.</span><span class="n">map_series_to_surfaces</span></a><span class="p">(</span><span class="n">geo_data</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;Strat_Series_1&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Sandstone&#39;</span><span class="p">,</span> <span class="s1">&#39;Siltstone&#39;</span><span class="p">,</span> <span class="s1">&#39;Shale&#39;</span><span class="p">),</span>
+                                             <span class="s2">&quot;Strat_Series_2&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Sandstone2&#39;</span><span class="p">,</span> <span class="s1">&#39;Siltstone2&#39;</span><span class="p">,</span> <span class="s1">&#39;Shale2&#39;</span><span class="p">)},</span>
+                                  <span class="p">)</span>
+    <span class="c1">### Model 5 - One normal Fault ###</span>
+    <span class="c1">### Model 8 - ###</span>
+    <span class="k">elif</span> <span class="n">name_model</span> <span class="ow">in</span> <span class="n">subset_list_2</span><span class="p">:</span>
+        <a href="../../GemPy API/gempy.map_series_to_surfaces.html#gempy.map_series_to_surfaces" title="gempy.map_series_to_surfaces" class="sphx-glr-backref-module-gempy sphx-glr-backref-type-py-function"><span class="n">gp</span><span class="o">.</span><span class="n">map_series_to_surfaces</span></a><span class="p">(</span><span class="n">geo_data</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;Fault_Series&quot;</span><span class="p">:</span> <span class="s1">&#39;Main_Fault&#39;</span><span class="p">,</span>
+                                             <span class="s2">&quot;Strat_Series&quot;</span><span class="p">:</span> <span class="p">(</span>
+                                             <span class="s1">&#39;Sandstone&#39;</span><span class="p">,</span> <span class="s1">&#39;Siltstone&#39;</span><span class="p">,</span> <span class="s1">&#39;Shale&#39;</span><span class="p">,</span> <span class="s1">&#39;Sandstone_2&#39;</span><span class="p">,</span> <span class="s1">&#39;Schist&#39;</span><span class="p">,</span> <span class="s1">&#39;Gneiss&#39;</span><span class="p">)},</span>
+                                  <span class="p">)</span>
+        <span class="n">geo_data</span><span class="o">.</span><span class="n">set_is_fault</span><span class="p">([</span><span class="s1">&#39;Fault_Series&#39;</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">name_model</span> <span class="ow">in</span> <span class="n">subset_list_3</span><span class="p">:</span>
+        <span class="c1">### Model 2 - Aufwölbung (durch Salzstock?) ###</span>
+        <span class="c1">### Model 3+9 - Parallele NNE Schichtung ohne Verwerfung ###</span>
+        <span class="c1">### Model 6 - Mulde ###</span>
+        <a href="../../GemPy API/gempy.map_series_to_surfaces.html#gempy.map_series_to_surfaces" title="gempy.map_series_to_surfaces" class="sphx-glr-backref-module-gempy sphx-glr-backref-type-py-function"><span class="n">gp</span><span class="o">.</span><span class="n">map_series_to_surfaces</span></a><span class="p">(</span><span class="n">geo_data</span><span class="p">,</span> <span class="p">{</span>
+            <span class="s2">&quot;Strat_Series&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Sandstone&#39;</span><span class="p">,</span> <span class="s1">&#39;Siltstone&#39;</span><span class="p">,</span> <span class="s1">&#39;Shale&#39;</span><span class="p">,</span> <span class="s1">&#39;Sandstone_2&#39;</span><span class="p">,</span> <span class="s1">&#39;Schist&#39;</span><span class="p">,</span> <span class="s1">&#39;Gneiss&#39;</span><span class="p">)},</span>
+                                  <span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">name_model</span> <span class="ow">in</span> <span class="n">subset_list_4</span><span class="p">:</span>
+        <span class="c1">### Model 7 - Graben ###</span>
+        <a href="../../GemPy API/gempy.map_series_to_surfaces.html#gempy.map_series_to_surfaces" title="gempy.map_series_to_surfaces" class="sphx-glr-backref-module-gempy sphx-glr-backref-type-py-function"><span class="n">gp</span><span class="o">.</span><span class="n">map_series_to_surfaces</span></a><span class="p">(</span><span class="n">geo_data</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;Fault_1&quot;</span><span class="p">:</span> <span class="s1">&#39;Fault_1&#39;</span><span class="p">,</span> <span class="s2">&quot;Fault_2&quot;</span><span class="p">:</span> <span class="s1">&#39;Fault_2&#39;</span><span class="p">,</span>
+                                             <span class="s2">&quot;Strat_Series&quot;</span><span class="p">:</span> <span class="p">(</span>
+                                             <span class="s1">&#39;Sandstone&#39;</span><span class="p">,</span> <span class="s1">&#39;Siltstone&#39;</span><span class="p">,</span> <span class="s1">&#39;Shale&#39;</span><span class="p">,</span> <span class="s1">&#39;Sandstone_2&#39;</span><span class="p">,</span> <span class="s1">&#39;Schist&#39;</span><span class="p">,</span> <span class="s1">&#39;Gneiss&#39;</span><span class="p">)},</span>
+                                  <span class="p">)</span>
+        <span class="n">geo_data</span><span class="o">.</span><span class="n">set_is_fault</span><span class="p">([</span><span class="s1">&#39;Fault_1&#39;</span><span class="p">,</span> <span class="s1">&#39;Fault_2&#39;</span><span class="p">])</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;You would never reach this point. Look for the bug&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Interpolation and Computation</span>
+    <span class="k">if</span> <span class="n">interpolator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">interp_data</span> <span class="o">=</span> <span class="n">gp</span><span class="o">.</span><span class="n">set_interpolator</span><span class="p">(</span><span class="n">geo_data</span><span class="p">,</span> <span class="n">theano_optimizer</span><span class="o">=</span><span class="s1">&#39;fast_run&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">interp_data</span> <span class="o">=</span> <span class="n">interpolator</span>
+        <span class="n">geo_data</span><span class="o">.</span><span class="n">set_theano_function</span><span class="p">(</span><span class="n">interpolator</span><span class="p">)</span>
+    <span class="n">sol</span> <span class="o">=</span> <a href="../../GemPy API/gempy.compute_model.html#gempy.compute_model" title="gempy.compute_model" class="sphx-glr-backref-module-gempy sphx-glr-backref-type-py-function"><span class="n">gp</span><span class="o">.</span><span class="n">compute_model</span></a><span class="p">(</span><span class="n">geo_data</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">plot_section</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="c1"># 2D Plot</span>
+        <a href="../../Plot/gempy.plot_2d.html#gempy.plot_2d" title="gempy.plot_2d" class="sphx-glr-backref-module-gempy sphx-glr-backref-type-py-function"><span class="n">gp</span><span class="o">.</span><span class="n">plot_2d</span></a><span class="p">(</span><span class="n">geo_data</span><span class="p">,</span> <span class="n">cell_number</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
+                             <span class="n">direction</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">show_data</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <a href="../../Plot/gempy.plot_3d.html#gempy.plot_3d" title="gempy.plot_3d" class="sphx-glr-backref-module-gempy sphx-glr-backref-type-py-function"><span class="n">gp</span><span class="o">.</span><span class="n">plot_3d</span></a><span class="p">(</span><span class="n">geo_data</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">save_pickle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">save_pickle</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="n">gp</span><span class="o">.</span><span class="n">save_model_to_pickle</span><span class="p">(</span><span class="n">geo_data</span><span class="p">,</span> <span class="n">save_pickle</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gp</span><span class="o">.</span><span class="n">save_model_to_pickle</span><span class="p">(</span><span class="n">geo_data</span><span class="p">,</span> <span class="s1">&#39;lisa-&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">n_model</span><span class="p">))</span>
+
+    <span class="n">gp</span><span class="o">.</span><span class="n">save_model</span><span class="p">(</span><span class="n">geo_data</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">interp_data</span>
+</pre></div>
+</div>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">generate_all_models</span><span class="p">(</span><span class="n">list_of_models</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">list_of_models</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">e</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">interp</span> <span class="o">=</span> <span class="n">create_example</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">save_pickle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plot_section</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">create_example</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">interp</span><span class="p">,</span> <span class="n">save_pickle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plot_section</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="discordant-layering-1">
+<h3>Discordant layering 1<a class="headerlink" href="#discordant-layering-1" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">create_example</span><span class="p">(</span><span class="s1">&#39;Model 1&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="more examples" class="sphx-glr-single-img" src="../../_images/sphx_glr_more_examples_001.png" />
+<img alt="Cell Number: 25 Direction: y" class="sphx-glr-single-img" src="../../_images/sphx_glr_more_examples_002.png" />
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Active grids: [&#39;regular&#39;]
+Setting kriging parameters to their default values.
+Compiling theano function...
+Level of Optimization:  fast_run
+Device:  cpu
+Precision:  float64
+Number of faults:  0
+Compilation Done!
+Kriging values:
+                     values
+range              3.2e+03
+$C_o$              2.5e+05
+drift equations  [3, 3, 3]
+
+&lt;gempy.core.interpolator.InterpolatorModel object at 0x7f3efbb354d0&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="discordant-layering-2">
+<h3>Discordant layering 2<a class="headerlink" href="#discordant-layering-2" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">create_example</span><span class="p">(</span><span class="s1">&#39;Model 2&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="more examples" class="sphx-glr-single-img" src="../../_images/sphx_glr_more_examples_003.png" />
+<img alt="Cell Number: 25 Direction: y" class="sphx-glr-single-img" src="../../_images/sphx_glr_more_examples_004.png" />
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Active grids: [&#39;regular&#39;]
+Setting kriging parameters to their default values.
+Compiling theano function...
+Level of Optimization:  fast_run
+Device:  cpu
+Precision:  float64
+Number of faults:  0
+Compilation Done!
+Kriging values:
+                   values
+range            3.2e+03
+$C_o$            2.5e+05
+drift equations   [3, 3]
+
+&lt;gempy.core.interpolator.InterpolatorModel object at 0x7f3eea290ad0&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="discordant-layering-3">
+<h3>Discordant layering 3<a class="headerlink" href="#discordant-layering-3" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">create_example</span><span class="p">(</span><span class="s1">&#39;Model 3&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="more examples" class="sphx-glr-single-img" src="../../_images/sphx_glr_more_examples_005.png" />
+<img alt="Cell Number: 25 Direction: y" class="sphx-glr-single-img" src="../../_images/sphx_glr_more_examples_006.png" />
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Active grids: [&#39;regular&#39;]
+Setting kriging parameters to their default values.
+Compiling theano function...
+Level of Optimization:  fast_run
+Device:  cpu
+Precision:  float64
+Number of faults:  0
+Compilation Done!
+Kriging values:
+                   values
+range            3.2e+03
+$C_o$            2.5e+05
+drift equations   [3, 3]
+
+&lt;gempy.core.interpolator.InterpolatorModel object at 0x7f3ea3555190&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="one-normal-fault-1">
+<h3>One normal Fault 1<a class="headerlink" href="#one-normal-fault-1" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">create_example</span><span class="p">(</span><span class="s1">&#39;Model 5&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="more examples" class="sphx-glr-single-img" src="../../_images/sphx_glr_more_examples_007.png" />
+<img alt="Cell Number: 25 Direction: y" class="sphx-glr-single-img" src="../../_images/sphx_glr_more_examples_008.png" />
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Active grids: [&#39;regular&#39;]
+Fault colors changed. If you do not like this behavior, set change_color to False.
+Setting kriging parameters to their default values.
+Compiling theano function...
+Level of Optimization:  fast_run
+Device:  cpu
+Precision:  float64
+Number of faults:  1
+Compilation Done!
+Kriging values:
+                     values
+range              3.2e+03
+$C_o$              2.5e+05
+drift equations  [3, 3, 3]
+
+&lt;gempy.core.interpolator.InterpolatorModel object at 0x7f3e9f2aa190&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="fold">
+<h3>Fold<a class="headerlink" href="#fold" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">create_example</span><span class="p">(</span><span class="s1">&#39;Model 6&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="more examples" class="sphx-glr-single-img" src="../../_images/sphx_glr_more_examples_009.png" />
+<img alt="Cell Number: 25 Direction: y" class="sphx-glr-single-img" src="../../_images/sphx_glr_more_examples_010.png" />
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Active grids: [&#39;regular&#39;]
+Setting kriging parameters to their default values.
+Compiling theano function...
+Level of Optimization:  fast_run
+Device:  cpu
+Precision:  float64
+Number of faults:  0
+Compilation Done!
+Kriging values:
+                   values
+range            3.2e+03
+$C_o$            2.5e+05
+drift equations   [3, 3]
+
+&lt;gempy.core.interpolator.InterpolatorModel object at 0x7f3ee900f050&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="graben">
+<h3>Graben<a class="headerlink" href="#graben" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">create_example</span><span class="p">(</span><span class="s1">&#39;Model 7&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="more examples" class="sphx-glr-single-img" src="../../_images/sphx_glr_more_examples_011.png" />
+<img alt="Cell Number: 25 Direction: y" class="sphx-glr-single-img" src="../../_images/sphx_glr_more_examples_012.png" />
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Active grids: [&#39;regular&#39;]
+Fault colors changed. If you do not like this behavior, set change_color to False.
+Setting kriging parameters to their default values.
+Compiling theano function...
+Level of Optimization:  fast_run
+Device:  cpu
+Precision:  float64
+Number of faults:  2
+Compilation Done!
+Kriging values:
+                        values
+range                 3.2e+03
+$C_o$                 2.5e+05
+drift equations  [3, 3, 3, 3]
+
+&lt;gempy.core.interpolator.InterpolatorModel object at 0x7f3f28a9c090&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="one-normal-fault-2">
+<h3>One normal Fault 2<a class="headerlink" href="#one-normal-fault-2" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">create_example</span><span class="p">(</span><span class="s1">&#39;Model 8&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="more examples" class="sphx-glr-single-img" src="../../_images/sphx_glr_more_examples_013.png" />
+<img alt="Cell Number: 25 Direction: y" class="sphx-glr-single-img" src="../../_images/sphx_glr_more_examples_014.png" />
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Active grids: [&#39;regular&#39;]
+Fault colors changed. If you do not like this behavior, set change_color to False.
+Setting kriging parameters to their default values.
+Compiling theano function...
+Level of Optimization:  fast_run
+Device:  cpu
+Precision:  float64
+Number of faults:  1
+Compilation Done!
+Kriging values:
+                     values
+range              3.2e+03
+$C_o$              2.5e+05
+drift equations  [3, 3, 3]
+
+&lt;gempy.core.interpolator.InterpolatorModel object at 0x7f3e99bd84d0&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="horizontal-tilted">
+<h3>Horizontal tilted<a class="headerlink" href="#horizontal-tilted" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">create_example</span><span class="p">(</span><span class="s1">&#39;Model 9&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<img alt="more examples" class="sphx-glr-single-img" src="../../_images/sphx_glr_more_examples_015.png" />
+<img alt="Cell Number: 25 Direction: y" class="sphx-glr-single-img" src="../../_images/sphx_glr_more_examples_016.png" />
+<p class="sphx-glr-script-out">Out:</p>
+<div class="sphx-glr-script-out highlight-none notranslate"><div class="highlight"><pre><span></span>Active grids: [&#39;regular&#39;]
+Setting kriging parameters to their default values.
+Compiling theano function...
+Level of Optimization:  fast_run
+Device:  cpu
+Precision:  float64
+Number of faults:  0
+Compilation Done!
+Kriging values:
+                   values
+range            3.2e+03
+$C_o$            2.5e+05
+drift equations   [3, 3]
+
+&lt;gempy.core.interpolator.InterpolatorModel object at 0x7f3ea3021090&gt;
+</pre></div>
+</div>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># generate_all_models([&#39;Model 1&#39;, &#39;Model 2&#39;, &#39;Model 3&#39;,</span>
+<span class="c1">#                     &#39;Model 5&#39;, &#39;Model 6&#39;, &#39;Model 7&#39;,</span>
+<span class="c1">#                     &#39;Model 8&#39;, &#39;Model 9&#39;])</span>
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 1 minutes  31.083 seconds)</p>
+<div class="sphx-glr-footer class sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-geometries-more-examples-py">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/d755b4802844e96fe6f6a00082f48327/more_examples.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">more_examples.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../../_downloads/435cb86080f08f03fad1fd8447a955b2/more_examples.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">more_examples.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="../../index.html">
+    <img class="logo" src="../../_static/./logos/gempy.png" alt="Logo"/>
+    
+    <h1 class="logo logo-name">GemPy</h1>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=cgre-aachen&repo=gempy&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+    
+
+<p>
+<a class="badge" href="https://travis-ci.org/cgre-aachen/gempy">
+    <img
+        alt="https://secure.travis-ci.org/cgre-aachen/gempy.svg?branch=master"
+        src="https://secure.travis-ci.org/cgre-aachen/gempy.svg?branch=master"
+    />
+</a>
+</p>
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../projects.html">Additional projects</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting started</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started/index.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">GemPy Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Examples</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../index.html#simple-geometries">Simple geometries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#real-case-studies">Real case studies</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../integrations/index.html">Integrations</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../code.html">Code</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Examples</a><ul>
+      <li>Previous: <a href="7_combination.html" title="previous chapter">Model 7 - Combination</a></li>
+      <li>Next: <a href="../real/Alesmodel.html" title="next chapter">Alesmodel: Plotting sections and maps.</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017-2020, CGRE-Aachen Team.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/examples/geometries/more_examples.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
